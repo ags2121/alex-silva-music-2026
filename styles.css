@@ -1,0 +1,178 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Futura', 'Trebuchet MS', Arial, sans-serif;
+    background-color: white;
+    color: black;
+    line-height: 1.6;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+    body {
+        flex-direction: row;
+        gap: 60px;
+    }
+}
+
+nav {
+    margin-bottom: 40px;
+    border-bottom: 1px solid black;
+    padding-bottom: 10px;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+}
+
+nav a {
+    color: black;
+    text-decoration: none;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+nav a.active {
+    font-weight: bold;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.content {
+    max-width: 800px;
+}
+
+.music-item {
+    margin-bottom: 40px;
+}
+
+.music-item .year {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.music-item .artist {
+    margin-bottom: 3px;
+    font-weight: bold;
+}
+
+.music-item .album {
+    margin-bottom: 3px;
+    font-style: italic !important;
+}
+
+.music-item .label {
+    margin-bottom: 10px;
+}
+
+.music-item .label a {
+    color: black;
+}
+
+.music-item .tracks {
+    margin-top: 10px;
+}
+
+.music-item .track-name {
+    margin-bottom: 5px;
+}
+
+.music-item iframe {
+    margin-bottom: 10px;
+}
+
+.video-item {
+    margin-bottom: 40px;
+}
+
+.video-item .year {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.video-container {
+    margin: 20px 0;
+}
+
+.video-container iframe {
+    max-width: 100%;
+}
+
+a {
+    color: black;
+    text-decoration: underline;
+}
+
+a:hover {
+    opacity: 0.7;
+}
+
+.main-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.sidebar-text {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .sidebar-text {
+        display: block;
+        font-family: 'Allura', cursive;
+        font-size: 3em;
+        font-weight: normal;
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        white-space: nowrap;
+        padding-top: 40px;
+    }
+}
+
+.water-droplet {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    background-color: #4da6ff;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    image-rendering: pixelated;
+    box-shadow:
+        0 0 0 2px #66b3ff,
+        0 0 0 4px #80bfff;
+    animation: splash 0.8s ease-out forwards;
+}
+
+@keyframes splash {
+    0% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5) translateY(-10px);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(2) translateY(20px);
+        opacity: 0;
+    }
+}
