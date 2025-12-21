@@ -73,10 +73,12 @@ nav a.active {
     max-width: 800px;
     width: 100%;
     margin: 0 auto;
+    text-align: center;
 }
 
 .music-item {
     margin-bottom: 40px;
+    text-align: center;
 }
 
 .music-item .year {
@@ -117,6 +119,7 @@ nav a.active {
 
 .video-item {
     margin-bottom: 40px;
+    text-align: center;
 }
 
 .video-item .year {
