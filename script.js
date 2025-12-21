@@ -19,45 +19,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Water droplet effect
+    // Letter trail effect
+    const text = "Alex Silva Music";
+    let letterIndex = 0;
     let lastX = 0;
     let lastY = 0;
-    let lastTime = Date.now();
+    const minDistance = 30; // Minimum distance in pixels before creating a new letter
 
     document.addEventListener('mousemove', function(e) {
-        const currentTime = Date.now();
-        const timeDiff = currentTime - lastTime;
-
-        if (timeDiff === 0) return;
-
         const dx = e.clientX - lastX;
         const dy = e.clientY - lastY;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        const velocity = distance / timeDiff;
 
-        // Create more droplets based on velocity
-        const numDroplets = Math.min(Math.floor(velocity * 2), 5);
-
-        for (let i = 0; i < numDroplets; i++) {
-            createDroplet(e.clientX + (Math.random() - 0.5) * 20, e.clientY + (Math.random() - 0.5) * 20);
+        if (distance >= minDistance) {
+            createLetter(e.clientX, e.clientY);
+            lastX = e.clientX;
+            lastY = e.clientY;
         }
-
-        lastX = e.clientX;
-        lastY = e.clientY;
-        lastTime = currentTime;
     });
 
-    function createDroplet(x, y) {
-        const droplet = document.createElement('div');
-        droplet.className = 'water-droplet';
-        droplet.style.left = x + 'px';
-        droplet.style.top = y + 'px';
+    function createLetter(x, y) {
+        const letter = document.createElement('div');
+        letter.className = 'trail-letter';
+        letter.textContent = text[letterIndex];
+        letter.style.left = x + 'px';
+        letter.style.top = y + 'px';
 
-        document.body.appendChild(droplet);
+        document.body.appendChild(letter);
 
-        // Remove droplet after animation
+        // Cycle through letters
+        letterIndex = (letterIndex + 1) % text.length;
+
+        // Remove letter after animation
         setTimeout(() => {
-            droplet.remove();
-        }, 800);
+            letter.remove();
+        }, 600);
     }
 });
