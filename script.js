@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Letter trail effect
-    const text = "Alex Silva Music";
+    const text = "AlexSilvaMusic";
     let letterIndex = 0;
     let lastX = 0;
     let lastY = 0;
