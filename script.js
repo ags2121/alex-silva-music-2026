@@ -1,23 +1,57 @@
+// Prevent browser from scrolling to hash on page load
+if (window.location.hash) {
+    setTimeout(function() {
+        window.scrollTo(0, 0);
+    }, 1);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const navLinks = document.querySelectorAll('.nav-link');
     const pages = document.querySelectorAll('.page');
+
+    function activatePage(pageId, updateHash = true) {
+        // Remove active class from all links and pages
+        navLinks.forEach(l => l.classList.remove('active'));
+        pages.forEach(p => p.classList.remove('active'));
+
+        // Add active class to the correct link and page
+        const targetLink = document.querySelector(`[data-page="${pageId}"]`);
+        const targetPage = document.getElementById(pageId);
+
+        if (targetLink && targetPage) {
+            targetLink.classList.add('active');
+            targetPage.classList.add('active');
+        }
+
+        // Update URL hash without scrolling
+        if (updateHash) {
+            history.replaceState(null, null, '#' + pageId);
+        }
+    }
 
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
 
-            // Remove active class from all links and pages
-            navLinks.forEach(l => l.classList.remove('active'));
-            pages.forEach(p => p.classList.remove('active'));
-
-            // Add active class to clicked link
-            this.classList.add('active');
-
             // Show corresponding page
             const pageId = this.getAttribute('data-page');
-            document.getElementById(pageId).classList.add('active');
+            activatePage(pageId);
         });
     });
+
+    // Handle hash navigation on page load
+    function handleHashChange() {
+        const hash = window.location.hash.slice(1); // Remove the #
+        if (hash) {
+            activatePage(hash, false);
+        }
+    }
+
+    // Listen for hash changes (back/forward buttons)
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Check hash on page load
+    handleHashChange();
 
     // Letter trail effect
     const text = "AlexSilvaMusic";
