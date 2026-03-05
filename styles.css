@@ -177,6 +177,40 @@ a:hover {
     }
 }
 
+.show-year {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.show-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: baseline;
+    padding: 14px 0;
+    border-bottom: 1px solid black;
+}
+
+.show-item:first-of-type {
+    border-top: 1px solid black;
+}
+
+.show-date {
+    font-weight: bold;
+    text-align: left;
+}
+
+.show-venue {
+    text-align: center;
+}
+
+.show-location {
+    color: #555;
+    font-size: 0.9em;
+    text-align: right;
+}
+
 .trail-letter {
     position: fixed;
     pointer-events: none;
