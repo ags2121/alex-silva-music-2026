@@ -40,8 +40,8 @@ def youtube_ok(id_):
     return 404 if code in (400, 401, 403) else code
 
 
-def targets(html):
-    """(label, check-fn) pairs for every Spotify/YouTube embed and outbound <a> link."""
+def targets(html, site):
+    """(label, check-fn) pairs for every Spotify/YouTube embed, outbound <a> link, and same-site file."""
     out = []
     for id_ in sorted(set(re.findall(r"youtube(?:-nocookie)?\.com/embed/([\w-]{11})", html))):
         out.append((f"YouTube {id_}", lambda i=id_: youtube_ok(i)))
@@ -49,6 +49,10 @@ def targets(html):
         out.append((f"Spotify {kind} {id_}", lambda k=kind, i=id_: spotify_ok(k, i)))
     for href in sorted(set(re.findall(r'<a\s[^>]*href="(https?://[^"]+)"', html))):
         out.append((href, lambda h=href: status(h)))
+    # Relative href/src (images, css, js): no colon means no scheme, so mailto:/data: etc. are skipped
+    for ref in sorted(set(re.findall(r'(?:href|src)="([^"#:]+)"', html))):
+        url = urllib.parse.urljoin(site + "/", ref)
+        out.append((url, lambda u=url: status(u)))
     return out
 
 
@@ -64,7 +68,7 @@ def find_problems(site):
     req = urllib.request.Request(site, headers={"User-Agent": UA})
     html = urllib.request.urlopen(req, timeout=20).read().decode()
 
-    pending = targets(html)
+    pending = targets(html, site)
     for attempt in range(3):
         if attempt:
             time.sleep(RETRY_DELAY)
@@ -91,7 +95,9 @@ def handler(event=None, context=None):
 if __name__ == "__main__":
     sample = ('<iframe src="https://open.spotify.com/embed/track/abc123?x"></iframe><a class="x" href="https://e.com/a">'
               '<iframe src="https://www.youtube.com/embed/ubxWFNi0-Ow?rel=0">')
-    assert [label for label, _ in targets(sample)] == ["YouTube ubxWFNi0-Ow", "Spotify track abc123", "https://e.com/a"]
+    sample += '<img src="images/x.jpg"><a href="mailto:a@b.c">'
+    assert [label for label, _ in targets(sample, "https://s.com")] == [
+        "YouTube ubxWFNi0-Ow", "Spotify track abc123", "https://e.com/a", "https://s.com/images/x.jpg"]
     assert youtube_ok("ubxWFNi0-Ow") == 200 and dead(youtube_ok("aaaaaaaaaaa"))
     RETRY_DELAY = 5
     for site in SITE_URLS:
