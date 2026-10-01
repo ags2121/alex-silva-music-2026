@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Nightly broken-embed/link check for alexsilvamusic.biz, emails via SNS.
+
+Resources:
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Protocol: email
+          Endpoint: alexsilva@fastmail.com
+
+  CheckRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: publish-alert
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: !Ref AlertTopic
+
+  CheckFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: site-embed-check
+      Runtime: python3.13
+      Handler: check.handler
+      Timeout: 600
+      Role: !GetAtt CheckRole.Arn
+      Environment:
+        Variables:
+          TOPIC_ARN: !Ref AlertTopic
+      Code:
+        # Stub; deploy.sh uploads the real check.py.
+        ZipFile: "def handler(e, c): raise RuntimeError('run deploy.sh')"
+
+  NightlyRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: cron(0 10 * * ? *)  # 10:00 UTC, ~5am Chicago
+      Targets:
+        - Id: check
+          Arn: !GetAtt CheckFunction.Arn
+
+  InvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CheckFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt NightlyRule.Arn
