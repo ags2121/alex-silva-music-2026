@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Nightly broken-embed/link check for alexsilvamusic.biz, emails via SNS.
+Description: Nightly broken-embed/link check for alexsilvamusic.biz and alejandrotheband.com, emails via SNS.
 
 Resources:
   AlertTopic:

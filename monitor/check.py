@@ -1,4 +1,4 @@
-"""Nightly check of alexsilvamusic.biz for dead Spotify embeds and dead links.
+"""Nightly check of our sites for dead Spotify/YouTube embeds and dead links.
 
 Runs as an AWS Lambda (see infra.yaml / deploy.sh). Run locally to check without emailing:
     python3 monitor/check.py
@@ -10,7 +10,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-SITE_URL = os.environ.get("SITE_URL", "https://alexsilvamusic.biz")
+SITE_URLS = os.environ.get("SITE_URLS", "https://alexsilvamusic.biz,https://alejandrotheband.com").split(",")
 # Known-good track; if it fails too, Spotify is having an outage, not us.
 CONTROL_TRACK = "4cOdK2wGLETKBW3PvgPWqT"
 RETRY_DELAY = 60
@@ -33,9 +33,18 @@ def spotify_ok(kind, id_):
     return status("https://open.spotify.com/oembed?url=" + urllib.parse.quote(url, safe=""))
 
 
+def youtube_ok(id_):
+    url = "https://www.youtube.com/watch?v=" + id_
+    code = status("https://www.youtube.com/oembed?url=" + urllib.parse.quote(url, safe=""))
+    # 400 = no such ID, 401/403 = private or embedding disabled: all unplayable embeds
+    return 404 if code in (400, 401, 403) else code
+
+
 def targets(html):
-    """(label, check-fn) pairs for every Spotify embed and outbound <a> link."""
+    """(label, check-fn) pairs for every Spotify/YouTube embed and outbound <a> link."""
     out = []
+    for id_ in sorted(set(re.findall(r"youtube(?:-nocookie)?\.com/embed/([\w-]{11})", html))):
+        out.append((f"YouTube {id_}", lambda i=id_: youtube_ok(i)))
     for kind, id_ in sorted(set(re.findall(r"open\.spotify\.com/embed/(\w+)/(\w+)", html))):
         out.append((f"Spotify {kind} {id_}", lambda k=kind, i=id_: spotify_ok(k, i)))
     for href in sorted(set(re.findall(r'<a\s[^>]*href="(https?://[^"]+)"', html))):
@@ -48,11 +57,11 @@ def dead(code):
     return code in (404, 410)
 
 
-def find_problems():
-    code = status(SITE_URL)
+def find_problems(site):
+    code = status(site)
     if code != 200:
-        return [f"Site itself returned {code}: {SITE_URL}"]
-    req = urllib.request.Request(SITE_URL, headers={"User-Agent": UA})
+        return [f"Site itself returned {code}: {site}"]
+    req = urllib.request.Request(site, headers={"User-Agent": UA})
     html = urllib.request.urlopen(req, timeout=20).read().decode()
 
     pending = targets(html)
@@ -64,23 +73,26 @@ def find_problems():
         pending = [(label, fn) for label, fn in pending if dead(fn())]
         if not pending:
             return []
-    return [f"Dead: {label}" for label, _ in pending]
+    return [f"Dead on {site}: {label}" for label, _ in pending]
 
 
 def handler(event=None, context=None):
-    problems = find_problems()
+    problems = [p for site in SITE_URLS for p in find_problems(site)]
     if problems:
         import boto3
         boto3.client("sns").publish(
             TopicArn=os.environ["TOPIC_ARN"],
-            Subject="alexsilvamusic.biz: broken embeds/links",
-            Message="\n".join(problems) + f"\n\nChecked {SITE_URL}",
+            Subject="Site check: broken embeds/links",
+            Message="\n".join(problems) + "\n\nChecked " + ", ".join(SITE_URLS),
         )
     return {"problems": problems}
 
 
 if __name__ == "__main__":
-    sample = '<iframe src="https://open.spotify.com/embed/track/abc123?x"></iframe><a class="x" href="https://e.com/a">'
-    assert [label for label, _ in targets(sample)] == ["Spotify track abc123", "https://e.com/a"]
+    sample = ('<iframe src="https://open.spotify.com/embed/track/abc123?x"></iframe><a class="x" href="https://e.com/a">'
+              '<iframe src="https://www.youtube.com/embed/ubxWFNi0-Ow?rel=0">')
+    assert [label for label, _ in targets(sample)] == ["YouTube ubxWFNi0-Ow", "Spotify track abc123", "https://e.com/a"]
+    assert youtube_ok("ubxWFNi0-Ow") == 200 and dead(youtube_ok("aaaaaaaaaaa"))
     RETRY_DELAY = 5
-    print(find_problems() or "All good.")
+    for site in SITE_URLS:
+        print(site, find_problems(site) or "All good.")
