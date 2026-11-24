@@ -96,15 +96,11 @@ nav a.active {
 }
 
 .music-item .album {
-    margin-bottom: 3px;
+    margin-bottom: 10px;
     font-style: italic !important;
 }
 
-.music-item .label {
-    margin-bottom: 10px;
-}
-
-.music-item .label a {
+.music-item .album a {
     color: black;
 }
 
